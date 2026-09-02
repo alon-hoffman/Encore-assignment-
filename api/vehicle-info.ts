@@ -38,6 +38,18 @@ function normalizeLicensePlate(value: unknown): string | null {
   return null;
 }
 
+function isNotFoundResponse(status: number, body: string): boolean {
+  if (status === 404) {
+    return true;
+  }
+
+  const normalizedBody = body.toLowerCase();
+  return (
+    normalizedBody.includes("404 page not found") ||
+    normalizedBody.includes("requested url was not found on this server")
+  );
+}
+
 export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
@@ -71,7 +83,9 @@ export default async function handler(
       body: JSON.stringify({ license_plate: licensePlate }),
     });
 
-    if (upstreamResponse.status === 404) {
+    const upstreamBody = await upstreamResponse.text();
+
+    if (isNotFoundResponse(upstreamResponse.status, upstreamBody)) {
       response.status(404).json({
         success: false,
         error: "Vehicle not found",
@@ -87,7 +101,7 @@ export default async function handler(
       return;
     }
 
-    const data: unknown = await upstreamResponse.json();
+    const data: unknown = JSON.parse(upstreamBody);
     response.status(200).json(data);
   } catch {
     response.status(502).json({
