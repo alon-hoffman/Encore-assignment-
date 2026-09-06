@@ -15,7 +15,8 @@ npm run dev
 ```
 
 The Vercel CLI will print the local URL, normally `http://localhost:3000`.
-The endpoint is `POST /api/vehicle-info`.
+The primary endpoint is `GET /api/vehicle-info?license_plate=12345678`.
+`POST /api/vehicle-info` remains available for existing clients.
 
 You can also check the TypeScript without starting the server:
 
@@ -28,19 +29,13 @@ npm run typecheck
 Successful lookup (when the upstream service recognizes the plate):
 
 ```bash
-curl -X POST \
-  "https://YOUR-VERCEL-DOMAIN.vercel.app/api/vehicle-info" \
-  -H "Content-Type: application/json" \
-  -d '{"license_plate":"12345678"}'
+curl "https://YOUR-VERCEL-DOMAIN.vercel.app/api/vehicle-info?license_plate=12345678"
 ```
 
 Invalid or missing license plate:
 
 ```bash
-curl -X POST \
-  "https://YOUR-VERCEL-DOMAIN.vercel.app/api/vehicle-info" \
-  -H "Content-Type: application/json" \
-  -d '{}'
+curl "https://YOUR-VERCEL-DOMAIN.vercel.app/api/vehicle-info"
 ```
 
 The invalid request returns HTTP 400:
@@ -54,6 +49,9 @@ The invalid request returns HTTP 400:
 
 For local requests, replace the deployed URL with
 `http://localhost:3000/api/vehicle-info`.
+
+The wrapper still calls the upstream service with POST, as required by the
+upstream API. That implementation detail is hidden from clients using GET.
 
 ## Deploy to Vercel
 

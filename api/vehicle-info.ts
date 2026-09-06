@@ -54,8 +54,8 @@ export default async function handler(
   request: VercelRequest,
   response: VercelResponse,
 ): Promise<void> {
-  if (request.method !== "POST") {
-    response.setHeader("Allow", "POST");
+  if (request.method !== "GET" && request.method !== "POST") {
+    response.setHeader("Allow", "GET, POST");
     response.status(405).json({
       success: false,
       error: "Method not allowed",
@@ -63,8 +63,11 @@ export default async function handler(
     return;
   }
 
-  const body = readBody(request.body);
-  const licensePlate = normalizeLicensePlate(body?.license_plate);
+  const rawLicensePlate =
+    request.method === "GET"
+      ? request.query.license_plate
+      : readBody(request.body)?.license_plate;
+  const licensePlate = normalizeLicensePlate(rawLicensePlate);
 
   if (licensePlate === null) {
     response.status(400).json({
